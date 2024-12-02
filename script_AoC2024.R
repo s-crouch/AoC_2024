@@ -181,102 +181,147 @@ library(readxl)
     
     #not all records have the same number of levels. Remove NAs. 
     sel_row <- sel_row[!is.na(sel_row)]
+    sel_row #TEMP
     
     #Calculate change between levels (left to right)
     lag_diff <- diff(sel_row)
+    lag_diff #TEMP
     
     # Determine if monotonic (all increasing or all decreasing):
     all_decreasing <- prod(lag_diff < 0) == 1
     all_increasing <- prod(lag_diff > 0) == 1
     monotonic <- sum(all_decreasing + all_increasing) > 0
-
-      #if not monotonic, identify levels that creates the issue: 
-      if(monotonic == FALSE){
-        
-        n_decreasing <- sum(lag_diff < 0)
-        n_increasing <- sum(lag_diff > 0)
-        n_flat <- sum(lag_diff == 0)
-        
-        if((max(n_decreasing, n_increasing, n_flat) < length(sel_row) - 2 )| n_flat > 1){
-          fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total (2 intervals) 
-        }else{
-          #Identify which type of value predominates (thus which needs to be removed)
-          trend <- which.max(c(n_decreasing, n_increasing, n_flat))
-
-          if(trend == 1) { #If trend == 1, identify and remove increase or flat
-            i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
-            fix_row <- sel_row[-i_drop]
-          }else if(trend == 2){ #If trend == 2, identify and remove decrease or flat
-            i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
-            fix_row <- sel_row[-i_drop]
-          } else {
-            warning(paste0("Check row ", r))
-          }
-          
-          #Check if fixed row passes acceptable difference check
-          lag_diff_fix <-  diff(fix_row)
-          abs_lag_diff_fix <- abs(lag_diff_fix)
-          print(paste0("Row ", r, " has max abs lag diff of", max(abs_lag_diff_fix)))
-          acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
-          
-          if(acceptable_diff_fix == TRUE & length(i_drop) == 1){
-            fixable = TRUE
-          } else {
-            fixable = FALSE
-          }
-        }
-      } 
-      
-
-    # Check that adjacent levels differ by at least one and at most 3
+    
+    # Determine if adjacent levels differ by at least one and at most 3
     abs_lag_diff <- abs(lag_diff)
     acceptable_diff <- (max(abs_lag_diff) <= 3) & (min(abs_lag_diff) >= 1)
-
-    # If monotonic, but difference is outside acceptable range, check if only one or more than one bad level creates the issue
-    if((monotonic == TRUE&(is.na(fixable)|fixable != FALSE)) & acceptable_diff == FALSE){
-
-      too_big <- sum(abs_lag_diff > 3)
-      too_small <- sum(abs_lag_diff < 1)
-
-      if(too_big+too_small > 1){
+    
+    safe <- monotonic & acceptable_diff
+    safe #TEMP
+    
+    #If not safe based on original levels, investigate removal of 1 level
+    if(safe == FALSE){
+      #Address gap size 
+      n_wrong_gap <- sum(abs_lag_diff > 3, abs_lag_diff < 1)
+      if(n_wrong_gap > 1) { #Cannot fix if more than one gap of the wrong size
         fixable = FALSE
       }else{
-        remove_big <- too_big > too_small
-
-        #If TRUE, identify changes of >3 for removal. Else, identify changes < 1 for removal.
-        if(remove_big == TRUE){
-          i_drop <- which(abs_lag_diff > 3) + 1
-          fix_row <- sel_row[-i_drop]
+        i_drop <- c(which(abs_lag_diff > 3), which(abs_lag_diff < 1)) + 1
+        if(length(i_drop) == 0){
+          use_row <- sel_row
         }else{
-          i_drop <- which(abs_lag_diff < 1) + 1
-          fix_row <- sel_row[-i_drop]
+          use_row <- sel_row[-i_drop]
+          use_lag_diff <- diff(use_row)
         }
+        
+        #Check if updated row is monotonic
+        all_decreasing <- prod(use_lag_diff < 0) == 1
+        all_increasing <- prod(use_lag_diff > 0) == 1
+        monotonic <- sum(all_decreasing + all_increasing) > 0
 
-        #Check if fixed row passes acceptable difference check
-        lag_diff_fix <-  diff(fix_row)
-        abs_lag_diff_fix <- abs(lag_diff_fix)
-        acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
-
-        if(acceptable_diff_fix == TRUE){
+        if(monotonic == TRUE) {
           fixable = TRUE
+          }else{
+            if(i_drop > 0) {#if not monotonic, but length i_drop > 0, out of options. 
+              fixable = FALSE
+            }else{# If not monotonic, but length i_drop == 0, remove one and re-test
+                #COMPLETE HERE
+              }
         }
       }
     }
-
-    data_df_mod$monotonic[r] <- monotonic
-    data_df_mod$acceptable_diff[r] <- acceptable_diff
     
-    safe <- monotonic & acceptable_diff
-    data_df_mod$safe[r] <- safe
-    
-    data_df_mod$fixable[r] <- fixable
-
-  }
-  
-  data_df_mod$pass <- data_df_mod$safe|data_df_mod$fixable
-  data_df_mod
-  n_pass_reports <- sum(data_df_mod$pass, na.rm = TRUE)
-  n_pass_reports
-  
+  #   
+  #   
+  #   
+  # 
+  #     #if not monotonic, identify levels that creates the issue: 
+  #     if(monotonic == FALSE){
+  #       
+  #       n_decreasing <- sum(lag_diff < 0)
+  #       n_increasing <- sum(lag_diff > 0)
+  #       n_flat <- sum(lag_diff == 0)
+  #       
+  #       if((max(n_decreasing, n_increasing, n_flat) < length(sel_row) - 2 )| n_flat > 1){
+  #         fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total (2 intervals) 
+  #       }else{
+  #         #Identify which type of value predominates (thus which needs to be removed)
+  #         trend <- which.max(c(n_decreasing, n_increasing, n_flat))
+  # 
+  #         if(trend == 1) { #If trend == 1, identify and remove increase or flat
+  #           i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
+  #           fix_row <- sel_row[-i_drop]
+  #         }else if(trend == 2){ #If trend == 2, identify and remove decrease or flat
+  #           i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
+  #           fix_row <- sel_row[-i_drop]
+  #         } else {
+  #           warning(paste0("Check row ", r))
+  #         }
+  #         
+  #         #Check if fixed row passes acceptable difference check
+  #         lag_diff_fix <-  diff(fix_row)
+  #         abs_lag_diff_fix <- abs(lag_diff_fix)
+  #         print(paste0("Row ", r, " has max abs lag diff of", max(abs_lag_diff_fix)))
+  #         acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
+  #         
+  #         if(acceptable_diff_fix == TRUE & length(i_drop) == 1){
+  #           fixable = TRUE
+  #         } else {
+  #           fixable = FALSE
+  #         }
+  #       }
+  #     } 
+  #     
+  # 
+  #   # Check that adjacent levels differ by at least one and at most 3
+  #   abs_lag_diff <- abs(lag_diff)
+  #   acceptable_diff <- (max(abs_lag_diff) <= 3) & (min(abs_lag_diff) >= 1)
+  # 
+  #   # If monotonic, but difference is outside acceptable range, check if only one or more than one bad level creates the issue
+  #   if((monotonic == TRUE&(is.na(fixable)|fixable != FALSE)) & acceptable_diff == FALSE){
+  # 
+  #     too_big <- sum(abs_lag_diff > 3)
+  #     too_small <- sum(abs_lag_diff < 1)
+  # 
+  #     if(too_big+too_small > 1){
+  #       fixable = FALSE
+  #     }else{
+  #       remove_big <- too_big > too_small
+  # 
+  #       #If TRUE, identify changes of >3 for removal. Else, identify changes < 1 for removal.
+  #       if(remove_big == TRUE){
+  #         i_drop <- which(abs_lag_diff > 3) + 1
+  #         fix_row <- sel_row[-i_drop]
+  #       }else{
+  #         i_drop <- which(abs_lag_diff < 1) + 1
+  #         fix_row <- sel_row[-i_drop]
+  #       }
+  # 
+  #       #Check if fixed row passes acceptable difference check
+  #       lag_diff_fix <-  diff(fix_row)
+  #       abs_lag_diff_fix <- abs(lag_diff_fix)
+  #       acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
+  # 
+  #       if(acceptable_diff_fix == TRUE){
+  #         fixable = TRUE
+  #       }
+  #     }
+  #   }
+  # 
+  #   data_df_mod$monotonic[r] <- monotonic
+  #   data_df_mod$acceptable_diff[r] <- acceptable_diff
+  #   
+  #   safe <- monotonic & acceptable_diff
+  #   data_df_mod$safe[r] <- safe
+  #   
+  #   data_df_mod$fixable[r] <- fixable
+  # 
+  # }
+  # 
+  # data_df_mod$pass <- data_df_mod$safe|data_df_mod$fixable
+  # data_df_mod
+  # n_pass_reports <- sum(data_df_mod$pass, na.rm = TRUE)
+  # n_pass_reports
+  # 
   
   
