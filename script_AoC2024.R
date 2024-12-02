@@ -93,15 +93,20 @@ library(readxl)
   # The unusual data (your puzzle input) consists of many reports, one report per line. 
   # Each report is a list of numbers called levels that are separated by spaces. For example:  
   
-  data <- c(7, 6, 4, 2, 1,
-            1, 2, 7, 8, 9,
-            9, 7, 6, 2, 1,
-            1, 3, 2, 4, 5,
-            8, 6, 4, 4, 1,
-            1, 3, 6, 7, 9)
-    
-    
-  data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
+  # data <- c(7, 6, 4, 2, 1,
+  #           1, 2, 7, 8, 9,
+  #           9, 7, 6, 2, 1,
+  #           1, 3, 2, 4, 5,
+  #           8, 6, 4, 4, 1,
+  #           1, 3, 6, 7, 9)
+  #   
+  #   
+  # data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
+   
+  data_df <- read.delim(paste0(input_dir, "D2_P1.txt"),
+                      sep = " ", 
+                      header = FALSE) 
+
   colnames(data_df) <- paste0("level_", seq(1:ncol(data_df)))
   
   # The engineers are trying to figure out which reports are safe. 
@@ -116,7 +121,10 @@ library(readxl)
   # Check each report (row)
   for(r in 1:nrow(data_df)){
     
-    sel_row <- as.numeric(data_df[r,])
+    sel_row <- as.numeric(data_df[r,]) 
+    
+    #not all records have the same number of levels. Remove NAs. 
+    sel_row <- sel_row[!is.na(sel_row)]
     
     #Calculate change between levels (left to right)
     lag_diff <- diff(sel_row)
