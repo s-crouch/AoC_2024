@@ -56,5 +56,34 @@ library(readxl)
   
   total_distance
   
+# PUZZLE 2
+  
+  #A lot of location IDs appear in both lists! Maybe the other numbers aren't location IDs at all but rather misinterpreted handwriting.
+  # This time, you'll need to figure out exactly how often each number from the left list appears in the right list. 
+  # Calculate a total similarity score by adding up each number in the left list after multiplying it by the number of times that number appears in the right list.
+  
+  list1 <- c(3, 4, 2, 1, 3, 3)
+  list2 <- c(4, 3, 5, 3, 9, 3)
+  list1 <- list1 %>% sort()
+  list2 <- list2 %>% sort()
+  reconcile_df <- as.data.frame(cbind(list1, list2))
+  reconcile_df <- reconcile_df %>% mutate(distance = abs(list1 -list2))
+  
+  similarity_score <- 0
+  
+  for(i in reconcile_df$list1){
+    
+    #Check for occurrence of lefthand list item in righthand list
+    common_check <- reconcile_df$list2 == i
+    
+    #count number of occurrences
+    common_sum <- sum(common_check)
+    
+    #calculate running similarity score
+    similarity_score <- similarity_score + (common_sum * i)
+
+  }
+  
+  similarity_score
   
 ### Day 2 ######################################################################
