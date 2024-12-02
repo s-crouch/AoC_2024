@@ -197,20 +197,20 @@ library(readxl)
         n_increasing <- sum(lag_diff > 0)
         n_flat <- sum(lag_diff == 0)
         
-        if(max(n_decreasing, n_increasing, n_flat) < length(sel_row) - 1){
-          fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total 
+        if((max(n_decreasing, n_increasing, n_flat) < length(sel_row) - 2 )| n_flat > 1){
+          fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total (2 intervals) 
         }else{
           #Identify which type of value predominates (thus which needs to be removed)
           trend <- which.max(c(n_decreasing, n_increasing, n_flat))
-          
 
-          #If TRUE, identify decrease (negatives) for removal. Else, identify increase (positives)
-          if(remove_dec == TRUE) {
-            i_drop <- which(lag_diff < 0) + 1 #index in original row is 1 greater than lag_diff
+          if(trend == 1) { #If trend == 1, identify and remove increase or flat
+            i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
             fix_row <- sel_row[-i_drop]
-          }else{
-            i_drop <- which(lag_diff > 0) + 1 #index in original row is 1 greater than lag_diff
+          }else if(trend == 2){ #If trend == 2, identify and remove decrease or flat
+            i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
             fix_row <- sel_row[-i_drop]
+          } else {
+            warning(paste0("Check row ", r))
           }
           
           #Check if fixed row passes acceptable difference check
