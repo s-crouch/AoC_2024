@@ -155,7 +155,7 @@ library(readxl)
   
   # The Problem Dampener is a reactor-mounted module that lets the reactor safety systems tolerate a single bad level in what would otherwise be a safe report. It's like the bad level never happened!
   # Now, the same rules apply as before, except if removing a single level from an unsafe report would make it safe, the report instead counts as safe.  
-  
+   
   data <- c(7, 6, 4, 2, 1,
             1, 2, 7, 8, 9,
             9, 7, 6, 2, 1,
@@ -165,7 +165,7 @@ library(readxl)
 
 
   data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
-  
+
   colnames(data_df) <- paste0("level_", seq(1:ncol(data_df)))
   
   # Create saveout dataframe
@@ -198,6 +198,7 @@ library(readxl)
         
         if(n_decreasing > 2 & n_increasing > 2){
           fixable = FALSE
+          next
         }else{
           remove_dec <- n_decreasing < n_increasing 
           
@@ -279,12 +280,11 @@ library(readxl)
     data_df_mod$safe[r] <- safe
     
     data_df_mod$fixable[r] <- fixable
-    
-    
+
   }
   
-  data_df_mod
   data_df_mod$pass <- data_df_mod$safe|data_df_mod$fixable
+  data_df_mod
   n_pass_reports <- sum(data_df_mod$pass, na.rm = TRUE)
   n_pass_reports
   
