@@ -156,15 +156,15 @@ library(readxl)
   # The Problem Dampener is a reactor-mounted module that lets the reactor safety systems tolerate a single bad level in what would otherwise be a safe report. It's like the bad level never happened!
   # Now, the same rules apply as before, except if removing a single level from an unsafe report would make it safe, the report instead counts as safe.  
    
-  data <- c(7, 6, 4, 2, 1,
-            1, 2, 7, 8, 9,
-            9, 7, 6, 2, 1,
-            1, 3, 2, 4, 5,
-            8, 6, 4, 4, 1,
-            1, 3, 6, 7, 9)
-
-
-  data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
+  # data <- c(7, 6, 4, 2, 1,
+  #           1, 2, 7, 8, 9,
+  #           9, 7, 6, 2, 1,
+  #           1, 3, 2, 4, 5,
+  #           8, 6, 4, 4, 1,
+  #           1, 3, 6, 7, 9)
+  # 
+  # 
+  # data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
 
   colnames(data_df) <- paste0("level_", seq(1:ncol(data_df)))
   
@@ -195,29 +195,34 @@ library(readxl)
         
         n_decreasing <- sum(lag_diff < 0)
         n_increasing <- sum(lag_diff > 0)
+        n_flat <- sum(lag_diff == 0)
         
-        if(n_decreasing > 2 & n_increasing > 2){
-          fixable = FALSE
-          next
+        if(max(n_decreasing, n_increasing, n_flat) < length(sel_row) - 1){
+          fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total 
         }else{
-          remove_dec <- n_decreasing < n_increasing 
+          #Identify which type of value predominates (thus which needs to be removed)
+          trend <- which.max(c(n_decreasing, n_increasing, n_flat))
           
+
           #If TRUE, identify decrease (negatives) for removal. Else, identify increase (positives)
           if(remove_dec == TRUE) {
-            i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
+            i_drop <- which(lag_diff < 0) + 1 #index in original row is 1 greater than lag_diff
             fix_row <- sel_row[-i_drop]
           }else{
-            i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
+            i_drop <- which(lag_diff > 0) + 1 #index in original row is 1 greater than lag_diff
             fix_row <- sel_row[-i_drop]
           }
-          #Check if fixed row passes acceptable difference check
           
+          #Check if fixed row passes acceptable difference check
           lag_diff_fix <-  diff(fix_row)
           abs_lag_diff_fix <- abs(lag_diff_fix)
+          print(paste0("Row ", r, " has max abs lag diff of", max(abs_lag_diff_fix)))
           acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
           
-          if(acceptable_diff_fix == TRUE){
+          if(acceptable_diff_fix == TRUE & length(i_drop) == 1){
             fixable = TRUE
+          } else {
+            fixable = FALSE
           }
         }
       } 
@@ -226,57 +231,42 @@ library(readxl)
     # Check that adjacent levels differ by at least one and at most 3
     abs_lag_diff <- abs(lag_diff)
     acceptable_diff <- (max(abs_lag_diff) <= 3) & (min(abs_lag_diff) >= 1)
-    
+
     # If monotonic, but difference is outside acceptable range, check if only one or more than one bad level creates the issue
-    if(acceptable_diff == FALSE){
-      
+    if((monotonic == TRUE&(is.na(fixable)|fixable != FALSE)) & acceptable_diff == FALSE){
+
       too_big <- sum(abs_lag_diff > 3)
       too_small <- sum(abs_lag_diff < 1)
-      
+
       if(too_big+too_small > 1){
         fixable = FALSE
       }else{
         remove_big <- too_big > too_small
-        
+
         #If TRUE, identify changes of >3 for removal. Else, identify changes < 1 for removal.
         if(remove_big == TRUE){
-          i_drop <- which(abs_lag_diff > 3)
+          i_drop <- which(abs_lag_diff > 3) + 1
           fix_row <- sel_row[-i_drop]
         }else{
-          i_drop <- which(abs_lag_diff < 1)
+          i_drop <- which(abs_lag_diff < 1) + 1
           fix_row <- sel_row[-i_drop]
         }
-        
+
         #Check if fixed row passes acceptable difference check
         lag_diff_fix <-  diff(fix_row)
         abs_lag_diff_fix <- abs(lag_diff_fix)
         acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
-        
+
         if(acceptable_diff_fix == TRUE){
           fixable = TRUE
-          
         }
-      } 
-    } 
-    
-    
-      # if(acceptable_diff == FALSE){
-      #   #Check if both highest and lowest are issues. If so, cannot be fixed. 
-      #   if(sum((max(abs_lag_diff) > 3), (min(abs_lag_diff) < 1))> 1) {
-      #     fixable_2 <- "no"
-      #   }else{
-      #     if(max(abs_lag_diff) > 3){}
-      #   }
-      #   
-      #   #
-      #   
-      # }
-      # 
-    safe <- monotonic & acceptable_diff
-    
+      }
+    }
+
     data_df_mod$monotonic[r] <- monotonic
     data_df_mod$acceptable_diff[r] <- acceptable_diff
     
+    safe <- monotonic & acceptable_diff
     data_df_mod$safe[r] <- safe
     
     data_df_mod$fixable[r] <- fixable
