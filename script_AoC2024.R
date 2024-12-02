@@ -153,3 +153,140 @@ library(readxl)
   
 # PUZZLE 2 ---------------------------------------------------------------------
   
+  # The Problem Dampener is a reactor-mounted module that lets the reactor safety systems tolerate a single bad level in what would otherwise be a safe report. It's like the bad level never happened!
+  # Now, the same rules apply as before, except if removing a single level from an unsafe report would make it safe, the report instead counts as safe.  
+  
+  data <- c(7, 6, 4, 2, 1,
+            1, 2, 7, 8, 9,
+            9, 7, 6, 2, 1,
+            1, 3, 2, 4, 5,
+            8, 6, 4, 4, 1,
+            1, 3, 6, 7, 9)
+
+
+  data_df <- data.frame(matrix(unlist(data), nrow=6, byrow=TRUE))
+  
+  colnames(data_df) <- paste0("level_", seq(1:ncol(data_df)))
+  
+  # Create saveout dataframe
+  data_df_mod <- data_df
+  
+  # Check each report (row)
+  for(r in 1:nrow(data_df)){
+    
+    #reset fixable checker
+    fixable = NA
+    
+    sel_row <- as.numeric(data_df[r,]) 
+    
+    #not all records have the same number of levels. Remove NAs. 
+    sel_row <- sel_row[!is.na(sel_row)]
+    
+    #Calculate change between levels (left to right)
+    lag_diff <- diff(sel_row)
+    
+    # Determine if monotonic (all increasing or all decreasing):
+    all_decreasing <- prod(lag_diff < 0) == 1
+    all_increasing <- prod(lag_diff > 0) == 1
+    monotonic <- sum(all_decreasing + all_increasing) > 0
+
+      #if not monotonic, identify levels that creates the issue: 
+      if(monotonic == FALSE){
+        
+        n_decreasing <- sum(lag_diff < 0)
+        n_increasing <- sum(lag_diff > 0)
+        
+        if(n_decreasing > 2 & n_increasing > 2){
+          fixable = FALSE
+        }else{
+          remove_dec <- n_decreasing < n_increasing 
+          
+          #If TRUE, identify decrease (negatives) for removal. Else, identify increase (positives)
+          if(remove_dec == TRUE) {
+            i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
+            fix_row <- sel_row[-i_drop]
+          }else{
+            i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
+            fix_row <- sel_row[-i_drop]
+          }
+          #Check if fixed row passes acceptable difference check
+          
+          lag_diff_fix <-  diff(fix_row)
+          abs_lag_diff_fix <- abs(lag_diff_fix)
+          acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
+          
+          if(acceptable_diff_fix == TRUE){
+            fixable = TRUE
+          }
+        }
+      } 
+      
+
+    # Check that adjacent levels differ by at least one and at most 3
+    abs_lag_diff <- abs(lag_diff)
+    acceptable_diff <- (max(abs_lag_diff) <= 3) & (min(abs_lag_diff) >= 1)
+    
+    # If monotonic, but difference is outside acceptable range, check if only one or more than one bad level creates the issue
+    if(acceptable_diff == FALSE){
+      
+      too_big <- sum(abs_lag_diff > 3)
+      too_small <- sum(abs_lag_diff < 1)
+      
+      if(too_big+too_small > 1){
+        fixable = FALSE
+      }else{
+        remove_big <- too_big > too_small
+        
+        #If TRUE, identify changes of >3 for removal. Else, identify changes < 1 for removal.
+        if(remove_big == TRUE){
+          i_drop <- which(abs_lag_diff > 3)
+          fix_row <- sel_row[-i_drop]
+        }else{
+          i_drop <- which(abs_lag_diff < 1)
+          fix_row <- sel_row[-i_drop]
+        }
+        
+        #Check if fixed row passes acceptable difference check
+        lag_diff_fix <-  diff(fix_row)
+        abs_lag_diff_fix <- abs(lag_diff_fix)
+        acceptable_diff_fix <- (max(abs_lag_diff_fix) <= 3) & (min(abs_lag_diff_fix) >= 1)
+        
+        if(acceptable_diff_fix == TRUE){
+          fixable = TRUE
+          
+        }
+      } 
+    } 
+    
+    
+      # if(acceptable_diff == FALSE){
+      #   #Check if both highest and lowest are issues. If so, cannot be fixed. 
+      #   if(sum((max(abs_lag_diff) > 3), (min(abs_lag_diff) < 1))> 1) {
+      #     fixable_2 <- "no"
+      #   }else{
+      #     if(max(abs_lag_diff) > 3){}
+      #   }
+      #   
+      #   #
+      #   
+      # }
+      # 
+    safe <- monotonic & acceptable_diff
+    
+    data_df_mod$monotonic[r] <- monotonic
+    data_df_mod$acceptable_diff[r] <- acceptable_diff
+    
+    data_df_mod$safe[r] <- safe
+    
+    data_df_mod$fixable[r] <- fixable
+    
+    
+  }
+  
+  data_df_mod
+  data_df_mod$pass <- data_df_mod$safe|data_df_mod$fixable
+  n_pass_reports <- sum(data_df_mod$pass, na.rm = TRUE)
+  n_pass_reports
+  
+  
+  
