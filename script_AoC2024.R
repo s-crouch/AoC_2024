@@ -62,12 +62,12 @@ library(readxl)
   # This time, you'll need to figure out exactly how often each number from the left list appears in the right list. 
   # Calculate a total similarity score by adding up each number in the left list after multiplying it by the number of times that number appears in the right list.
   
-  list1 <- c(3, 4, 2, 1, 3, 3)
-  list2 <- c(4, 3, 5, 3, 9, 3)
-  list1 <- list1 %>% sort()
-  list2 <- list2 %>% sort()
-  reconcile_df <- as.data.frame(cbind(list1, list2))
-  reconcile_df <- reconcile_df %>% mutate(distance = abs(list1 -list2))
+  # list1 <- c(3, 4, 2, 1, 3, 3)
+  # list2 <- c(4, 3, 5, 3, 9, 3)
+  # list1 <- list1 %>% sort()
+  # list2 <- list2 %>% sort()
+  # reconcile_df <- as.data.frame(cbind(list1, list2))
+  # reconcile_df <- reconcile_df %>% mutate(distance = abs(list1 -list2))
   
   similarity_score <- 0
   
