@@ -176,6 +176,9 @@ library(readxl)
     
     #reset fixable checker
     fixable = NA
+    use_row = NA
+    use_ag_diff = NA
+    use_abs_lag_diff = NA
     
     sel_row <- as.numeric(data_df[r,]) 
     
@@ -209,27 +212,85 @@ library(readxl)
         i_drop <- c(which(abs_lag_diff > 3), which(abs_lag_diff < 1)) + 1
         if(length(i_drop) == 0){
           use_row <- sel_row
+          use_lag_diff <- lag_diff
         }else{
           use_row <- sel_row[-i_drop]
           use_lag_diff <- diff(use_row)
         }
         
-        #Check if updated row is monotonic
-        all_decreasing <- prod(use_lag_diff < 0) == 1
-        all_increasing <- prod(use_lag_diff > 0) == 1
-        monotonic <- sum(all_decreasing + all_increasing) > 0
-
-        if(monotonic == TRUE) {
-          fixable = TRUE
-          }else{
-            if(i_drop > 0) {#if not monotonic, but length i_drop > 0, out of options. 
-              fixable = FALSE
-            }else{# If not monotonic, but length i_drop == 0, remove one and re-test
-                #COMPLETE HERE
+        #Recheck that modified row meets gap requirements
+        use_abs_lag_diff <- abs(use_lag_diff)
+        n_wrong_gap_chk <- sum(use_abs_lag_diff > 3, use_abs_lag_diff < 1)
+        
+        if(n_wrong_gap_chk > 0){
+          fixable = FALSE
+        }else{
+          
+          #Check if updated row is monotonic
+          all_decreasing_chk <- prod(use_lag_diff < 0) == 1
+          all_increasing_chk <- prod(use_lag_diff > 0) == 1
+          monotonic_chk <- sum(all_decreasing_chk + all_increasing_chk) > 0
+  
+          if(monotonic_chk == TRUE) {
+            fixable = TRUE
+            }else{
+              if(length(i_drop) > 0) {#if not monotonic, but length i_drop > 0, out of options. 
+                fixable = FALSE
+              }else{# If not monotonic, but length i_drop == 0, remove one and re-test
+                 
+                n_decreasing <- sum(use_lag_diff < 0)
+                n_increasing <- sum(use_lag_diff > 0)
+                n_flat <- sum(use_lag_diff == 0)
+                
+                if((max(n_decreasing, n_increasing, n_flat) < length(use_row) - 2 )| n_flat > 1){
+                  fixable = FALSE #Cannot fix if prevailing trend contains less than 1 shy of total (2 intervals)
+                  }else{
+                    #Identify which type of value predominates (thus which needs to be removed)
+                    trend <- which.max(c(n_decreasing, n_increasing, n_flat))
+                    
+                    if(trend == 1) { #If trend == 1 (decreasing), identify and remove increase or flat
+                      i_drop <- which(lag_diff >= 0) + 1 #index in original row is 1 greater than lag_diff
+                      use_row <- sel_row[-i_drop]
+                      use_lag_diff <- diff(use_row)
+                      
+                    }else if(trend == 2){ #If trend == 2 (increasing), identify and remove decrease or flat
+                      i_drop <- which(lag_diff <= 0) + 1 #index in original row is 1 greater than lag_diff
+                      use_row <- sel_row[-i_drop]
+                      use_lag_diff <- diff(use_row)
+                      
+                    } else {
+                      warning(paste0("Check row ", r))
+                    }
+                    
+                    all_decreasing_fixed <- prod(use_lag_diff < 0) == 1
+                    all_increasing_fixed <- prod(use_lag_diff > 0) == 1
+                    monotonic_fixed <- sum(all_decreasing_fixed + all_increasing_fixed) > 0
+                    
+                    #Recheck that modified row meets gap requirements
+                    use_abs_lag_diff <- abs(use_lag_diff)
+                    n_wrong_gap_chk <- sum(use_abs_lag_diff > 3, use_abs_lag_diff < 1)
+                    
+                    if(monotonic_fixed & n_wrong_gap_chk == 0){fixable = TRUE}else{fixable = FALSE}
+                }
               }
+            }
+          }
         }
       }
+    
+    data_df_mod$monotonic[r] <- monotonic
+    data_df_mod$acceptable_diff[r] <- acceptable_diff
+    
+    data_df_mod$safe[r] <- safe
+    
+    data_df_mod$fixable[r] <- fixable
+    
     }
+  
+  data_df_mod$pass <- data_df_mod$safe|data_df_mod$fixable
+  data_df_mod
+  n_pass_reports <- sum(data_df_mod$pass, na.rm = TRUE)
+  n_pass_reports
     
   #   
   #   
