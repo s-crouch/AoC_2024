@@ -3,7 +3,7 @@
 # Title: Advent of Code 2024
 # Author: Sophia Crouch
 # Start date: 26 November 2024
-# Edit date: 1 December 2024
+# Edit date: 4 December 2024
 #
 ################################################################################
 
@@ -151,7 +151,7 @@ library(readxl)
   n_safe_reports <- sum(data_df_mod$safe)
   n_safe_reports
   
-# PUZZLE 2 ---------------------------------------------------------------------
+# PUZZLE 2 - INCOMPLETE --------------------------------------------------------
   
   # The Problem Dampener is a reactor-mounted module that lets the reactor safety systems tolerate a single bad level in what would otherwise be a safe report. It's like the bad level never happened!
   # Now, the same rules apply as before, except if removing a single level from an unsafe report would make it safe, the report instead counts as safe.  
@@ -170,7 +170,7 @@ library(readxl)
   
   # Create saveout dataframe
   data_df_mod <- data_df
-  
+
   # Check each report (row)
   for(r in 1:nrow(data_df)){
     
@@ -179,6 +179,8 @@ library(readxl)
     use_row = NA
     use_ag_diff = NA
     use_abs_lag_diff = NA
+    i_gap = NA
+    i_drop = NA
     
     sel_row <- as.numeric(data_df[r,]) 
     
@@ -209,7 +211,17 @@ library(readxl)
       if(n_wrong_gap > 1) { #Cannot fix if more than one gap of the wrong size
         fixable = FALSE
       }else{
-        i_drop <- c(which(abs_lag_diff > 3), which(abs_lag_diff < 1)) + 1
+        i_gap <- c(which(abs_lag_diff > 3), which(abs_lag_diff < 1)) #Identify which difference indicates an issue
+        
+        if(length(i_gap) > 0){
+          if(i_gap > 1){
+            i_drop <- i_gap + 1
+          }else if (i_gap == 1){ #when i_gap == 1, remove first item
+            if(sel_row[1] >= sel_row[2]){i_drop = i_gap}
+            if(sel_row[2] > sel_row[1]){i_drop = i_gap + 1}
+          }
+        }
+
         if(length(i_drop) == 0){
           use_row <- sel_row
           use_lag_diff <- lag_diff
@@ -385,4 +397,45 @@ library(readxl)
   # n_pass_reports
   # 
   
+### Day 3 ######################################################################
+
+# PUZZLE 1 ---------------------------------------------------------------------
+  
+  # It seems like the goal of the program is just to multiply some numbers. 
+  # It does that with instructions like mul(X,Y), where X and Y are each 1-3 digit numbers. 
+  # For instance, mul(44,46) multiplies 44 by 46 to get a result of 2024. 
+  # Similarly, mul(123,4) would multiply 123 by 4.  
+  
+  # However, because the program's memory has been corrupted, there are also many invalid characters that should be ignored, 
+  # even if they look like part of a mul instruction. Sequences like mul(4*, mul(6,9!, ?(12,34), or mul ( 2 , 4 ) do nothing.
+  
+  # For example, consider the following section of corrupted memory:
+  # xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
+  # Only the four highlighted sections are real mul instructions. Adding up the result of each instruction produces 161 (2*4 + 5*5 + 11*8 + 8*5).
+  # Scan the corrupted memory for uncorrupted mul instructions. What do you get if you add up all of the results of the multiplications?
+  
+  corrupt_data <- "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
+  
+  # str_extract_all(corrupt_data, pattern = c("[a-z]+", "\\d+"))
+  
+  
+  str_extract_all(corr_ex, "mul(.*,.*)")
+  str_extract_all(corr_ex, "mul(*,*)")
+  str_extract_all(corr_ex, "mul..,..") #clunky but works
+  
+  str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  str_extract_all(corr_ex, "mul\\(..,..\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  str_extract_all(corr_ex, "mul\\(...,...\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  
+  #specify range/number of wildards in regex?? 
+  #   str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+
+  mul_statements <- c(unlist(str_extract_all(corr_ex, "mul\\(.,.\\)")), 
+                      unlist(str_extract_all(corr_ex, "mul\\(..,..\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(...,...\\)")))
+  mul_statements
+  
+
+  grep("mul(.*,.*)", corr_ex, value = TRUE) #https://www.r-bloggers.com/2024/07/mastering-wildcard-searches-in-r-with-grep/
+  grep("mul(.,.)", corr_ex, value = TRUE) #https://www.r-bloggers.com/2024/07/mastering-wildcard-searches-in-r-with-grep/
   
