@@ -429,6 +429,12 @@ library(readxl)
   #specify range/number of wildards in regex?? 
   #   str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
 
+  str_extract_all(corrupt_data, regex("(?<=:)>.*"))
+  string = c("G1:E001", "G2:E002", "G3:E003")
+  regmatches(corrupt_data, regexpr('mul\\([0-999],[0-999]\\)', corrupt_data)) #https://stackoverflow.com/questions/17215789/extract-a-substring-according-to-a-pattern
+  
+  
+  str_extract_all(corrupt_data, regex('mul\\([0-999],[0-999]\\)')) #misses 11,8? 
   #Brute force because I can't figure out how to constrain wildcard length. Can rework. 
   mul_statements <- c(unlist(str_extract_all(corr_ex, "mul\\(.,.\\)")), 
                       unlist(str_extract_all(corr_ex, "mul\\(.,..\\)")),
