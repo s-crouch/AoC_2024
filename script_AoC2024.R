@@ -418,24 +418,45 @@ library(readxl)
   
   # str_extract_all(corrupt_data, pattern = c("[a-z]+", "\\d+"))
   
-  
-  str_extract_all(corr_ex, "mul(.*,.*)")
-  str_extract_all(corr_ex, "mul(*,*)")
-  str_extract_all(corr_ex, "mul..,..") #clunky but works
-  
-  str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  str_extract_all(corr_ex, "mul\\(..,..\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  str_extract_all(corr_ex, "mul\\(...,...\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  
+    # str_extract_all(corr_ex, "mul(.*,.*)")
+  # str_extract_all(corr_ex, "mul(*,*)")
+  # str_extract_all(corr_ex, "mul..,..") #clunky but works
+  # 
+  # str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  # str_extract_all(corr_ex, "mul\\(..,..\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  # str_extract_all(corr_ex, "mul\\(...,...\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
+  # 
   #specify range/number of wildards in regex?? 
   #   str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
 
+  #Brute force because I can't figure out how to constrain wildcard length. Can rework. 
   mul_statements <- c(unlist(str_extract_all(corr_ex, "mul\\(.,.\\)")), 
+                      unlist(str_extract_all(corr_ex, "mul\\(.,..\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(.,...\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(..,.\\)")),
                       unlist(str_extract_all(corr_ex, "mul\\(..,..\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(..,...\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(...,.\\)")),
+                      unlist(str_extract_all(corr_ex, "mul\\(...,..\\)")),
                       unlist(str_extract_all(corr_ex, "mul\\(...,...\\)")))
+  #duplicase 8,5
   mul_statements
   
-
-  grep("mul(.*,.*)", corr_ex, value = TRUE) #https://www.r-bloggers.com/2024/07/mastering-wildcard-searches-in-r-with-grep/
-  grep("mul(.,.)", corr_ex, value = TRUE) #https://www.r-bloggers.com/2024/07/mastering-wildcard-searches-in-r-with-grep/
+  num <- mul_statements %>% 
+         str_split(pattern = c("mul\\(")) %>% 
+         unlist() %>%
+         str_split(pattern = c("\\)")) %>% 
+         unlist() %>% 
+         sort(decreasing = TRUE) %>% 
+         str_extract_all("\\d+") %>% 
+         unlist()
+    
+  num_pairs_df <- as.data.frame(matrix(as.numeric(num), ncol = 2, byrow = TRUE))
+  
+  colnames(num_pairs_df) <- c("N1", "N2")
+          
+  num_pairs_df <- num_pairs_df %>% mutate(prod = N1 * N2)
+  
+  prod_sum <- sum(num_pairs_df$prod) 
+  prod_sum
   
