@@ -414,48 +414,12 @@ library(readxl)
   # Only the four highlighted sections are real mul instructions. Adding up the result of each instruction produces 161 (2*4 + 5*5 + 11*8 + 8*5).
   # Scan the corrupted memory for uncorrupted mul instructions. What do you get if you add up all of the results of the multiplications?
   
-  corrupt_data <- "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
+  # EXAMPLE 
+  # corrupt_data <- "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
   
-  # str_extract_all(corrupt_data, pattern = c("[a-z]+", "\\d+"))
-  
-    # str_extract_all(corr_ex, "mul(.*,.*)")
-  # str_extract_all(corr_ex, "mul(*,*)")
-  # str_extract_all(corr_ex, "mul..,..") #clunky but works
-  # 
-  # str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  # str_extract_all(corr_ex, "mul\\(..,..\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  # str_extract_all(corr_ex, "mul\\(...,...\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-  # 
-  #specify range/number of wildards in regex?? 
-  #   str_extract_all(corr_ex, "mul\\(.,.\\)") #https://stackoverflow.com/questions/5633533/regular-expression-for-matching-parentheses
-
-  # str_extract_all(corrupt_data, regex("(?<=:)>.*"))
-  # string = c("G1:E001", "G2:E002", "G3:E003")
-  # regmatches(corrupt_data, regexpr('mul\\([0-999],[0-999]\\)', corrupt_data)) #https://stackoverflow.com/questions/17215789/extract-a-substring-according-to-a-pattern
-  
-  
-  
-  # str_extract_all(corrupt_data, regex('mul\\([0-999],[0-999]\\)')) #misses 11,8? https://stackoverflow.com/questions/3148240/why-doesnt-01-12-range-work-as-expected
-  # 
-  # str_extract_all(corrupt_data, regex('mul\\([1-9][0-9],[1-9]\\)')) #catches only 11,8? https://stackoverflow.com/questions/3148240/why-doesnt-01-12-range-work-as-expected
-  # 
-  # str_extract_all(corrupt_data, regex('mul\\(\d{1},\d{1}\\)')) #misses 11,8? https://stackoverflow.com/questions/3148240/why-doesnt-01-12-range-work-as-expected
-  # 
-  # str_extract_all(corrupt_data, regex('\\d{1,3}')) #misses 11,8? https://stackoverflow.com/questions/3148240/why-doesnt-01-12-range-work-as-expected
+  corrupt_data <- 
   
   mul_statements <- unlist(str_extract_all(corrupt_data, regex('mul\\(\\d{1,3},\\d{1,3}\\)'))) #https://stackoverflow.com/questions/4271553/how-do-i-write-a-regular-expression-to-match-any-three-digit-number-value
-  
-
-  # #Brute force because I can't figure out how to constrain wildcard length. Can rework. 
-  # mul_statements <- c(unlist(str_extract_all(corr_ex, "mul\\(.,.\\)")), 
-  #                     unlist(str_extract_all(corr_ex, "mul\\(.,..\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(.,...\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(..,.\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(..,..\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(..,...\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(...,.\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(...,..\\)")),
-  #                     unlist(str_extract_all(corr_ex, "mul\\(...,...\\)")))
   
   mul_statements
   
