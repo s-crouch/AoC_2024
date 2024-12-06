@@ -459,7 +459,10 @@ library(readxl)
   # The other mul instructions function normally, including the one at the end that gets re-enabled by a do() instruction.  
     
   #EXAMPLE  
-  corrupt_data <- "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
+  # corrupt_data <- "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
+  
+  filepath <- paste0(input_dir, "D3_P1.txt")
+  corrupt_data <- readChar(filepath, file.info(filepath)$size)
   
   # do_statements <- unlist(str_extract_all(corrupt_data, regex('do\\(\\)')))
   # dont_statements <- unlist(str_extract_all(corrupt_data, regex("don't\\(\\)")))
