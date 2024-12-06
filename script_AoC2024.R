@@ -445,56 +445,78 @@ library(readxl)
   
   
 # PUZZLE 2 ---------------------------------------------------------------------
-# As you scan through the corrupted memory, you notice that some of the conditional statements are also still intact. 
-# If you handle some of the uncorrupted conditional statements in the program, you might be able to get an even more accurate result.
-# There are two new instructions you'll need to handle:
-  # The do() instruction enables future mul instructions.
-  # The don't() instruction disables future mul instructions.
-# Only the most recent do() or don't() instruction applies. At the beginning of the program, mul instructions are enabled.
+  # As you scan through the corrupted memory, you notice that some of the conditional statements are also still intact. 
+  # If you handle some of the uncorrupted conditional statements in the program, you might be able to get an even more accurate result.
+  # There are two new instructions you'll need to handle:
+    # The do() instruction enables future mul instructions.
+    # The don't() instruction disables future mul instructions.
+  # Only the most recent do() or don't() instruction applies. At the beginning of the program, mul instructions are enabled.
+    
+  # For example:
+  # xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
+  # This corrupted memory is similar to the example from before, 
+  # but this time the mul(5,5) and mul(11,8) instructions are disabled because there is a don't() instruction before them. 
+  # The other mul instructions function normally, including the one at the end that gets re-enabled by a do() instruction.  
+    
+  #EXAMPLE  
+  corrupt_data <- "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
   
-# For example:
-# xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
-# This corrupted memory is similar to the example from before, 
-# but this time the mul(5,5) and mul(11,8) instructions are disabled because there is a don't() instruction before them. 
-# The other mul instructions function normally, including the one at the end that gets re-enabled by a do() instruction.  
+  # do_statements <- unlist(str_extract_all(corrupt_data, regex('do\\(\\)')))
+  # dont_statements <- unlist(str_extract_all(corrupt_data, regex("don't\\(\\)")))
+  key_statements <- unlist(str_extract_all(corrupt_data, regex("mul\\(\\d{1,3},\\d{1,3}\\)|do\\(\\)|don't\\(\\)"))) #https://stackoverflow.com/questions/4271553/how-do-i-write-a-regular-expression-to-match-any-three-digit-number-value
+  mul_statements <- unlist(str_extract_all(corrupt_data, regex('mul\\(\\d{1,3},\\d{1,3}\\)'))) #https://stackoverflow.com/questions/4271553/how-do-i-write-a-regular-expression-to-match-any-three-digit-number-value
   
-#EXAMPLE  
-corrupt_data <- "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
-
-# do_statements <- unlist(str_extract_all(corrupt_data, regex('do\\(\\)')))
-# dont_statements <- unlist(str_extract_all(corrupt_data, regex("don't\\(\\)")))
-key_statements <- unlist(str_extract_all(corrupt_data, regex("mul\\(\\d{1,3},\\d{1,3}\\)|do\\(\\)|don't\\(\\)"))) #https://stackoverflow.com/questions/4271553/how-do-i-write-a-regular-expression-to-match-any-three-digit-number-value
-mul_statements <- unlist(str_extract_all(corrupt_data, regex('mul\\(\\d{1,3},\\d{1,3}\\)'))) #https://stackoverflow.com/questions/4271553/how-do-i-write-a-regular-expression-to-match-any-three-digit-number-value
-
-#Find indices of various parts
-i_muls <- which(key_statements %in% mul_statements)
-i_dos <- which(key_statements == "do()")
-i_donts <- which(key_statements == "don't()")
-
-muls_df <- as.data.frame(i_muls)
-muls_df$mul_statements <- mul_statements
-muls_df$process_bool <- c()
-
-#Identify if 'mul()' statements are preceded by a "do" or a "dont"
-for(i in 1:length(i_muls)){
-  index = i_muls[i]
+  #Find indices of various parts
+  i_muls <- which(key_statements %in% mul_statements)
+  i_dos <- which(key_statements == "do()")
+  i_donts <- which(key_statements == "don't()")
   
-  #find the nearest lower "do"
-  nearest_do <- suppressWarnings(max(i_dos[i_dos < index]))
+  muls_df <- as.data.frame(i_muls)
+  muls_df$mul_statements <- mul_statements
+  muls_df$process_bool <- c()
   
-  #find the nearest lower "don't"
-  nearest_dont <- suppressWarnings(max(i_donts[i_donts < index]))
-
-  #compare to determine if "do" or "don't". If neither, "do". 
-  if(abs(nearest_do) == Inf & abs(nearest_dont) == Inf){
-    process <- TRUE
-  }else if(nearest_do > nearest_dont){
-    process <- TRUE
-  }else{
-    process <- FALSE
+  #Identify if 'mul()' statements are preceded by a "do" or a "dont"
+  for(i in 1:length(i_muls)){
+    index = i_muls[i]
+    
+    #find the nearest lower "do"
+    nearest_do <- suppressWarnings(max(i_dos[i_dos < index]))
+    
+    #find the nearest lower "don't"
+    nearest_dont <- suppressWarnings(max(i_donts[i_donts < index]))
+  
+    #compare to determine if "do" or "don't". If neither, "do". 
+    if(abs(nearest_do) == Inf & abs(nearest_dont) == Inf){
+      process <- TRUE
+    }else if(nearest_do > nearest_dont){
+      process <- TRUE
+    }else{
+      process <- FALSE
+    }
+    
+    muls_df$process[i] <- process
   }
   
-  muls_df$process[i] <- process
-}
-
-muls_df
+  muls_df
+  
+  process_muls_df <- muls_df %>% filter(process == TRUE)
+  
+  process_muls <- process_muls_df$mul_statements
+  
+  num <- process_muls %>% 
+    str_split(pattern = c("mul\\(")) %>% 
+    unlist() %>%
+    str_split(pattern = c("\\)")) %>% 
+    unlist() %>% 
+    sort(decreasing = TRUE) %>% 
+    str_extract_all("\\d+") %>% 
+    unlist()
+  
+  num_pairs_df <- as.data.frame(matrix(as.numeric(num), ncol = 2, byrow = TRUE))
+  
+  colnames(num_pairs_df) <- c("N1", "N2")
+  
+  num_pairs_df <- num_pairs_df %>% mutate(prod = N1 * N2)
+  
+  prod_sum <- sum(num_pairs_df$prod) 
+  prod_sum
