@@ -601,7 +601,120 @@ library(readxl)
     # print(row)
   }
   
-  search_matrix
+  colnames(search_matrix) <- NULL
+  search_matrix 
   
+  #Check for viable letter combinations
+    # Beginning at each X, search for "M", then "A", then "S".
+  
+    for(r in 1:nrow(search_matrix)){
+      sel_row <- search_matrix[r,]
+      
+      for(c in 1:length(sel_row)){
+        sel_letter <- as.character(sel_row[c])
+        print(sel_letter)
+        check_list <- c()
+        
+        if(sel_letter != "X"){next} #if not an X, move on
+        #print(paste0("Found an X!"))
+        print(paste0("(", r,",",c,")"))
+        
+        # If an X is found, check surrounding letters for an M: 
+        #surrounding letters:
+          # (r-1,c-1) (r-1,c) (r-1,c+1)
+          # (r,c-1)   X(r,c)  (r,c+1)
+          # (r+1,c-1) (r+1,c) (r+1,c+1)
+        
+        # let's give them IDs
+          # 1 2 3 
+          # 4 X 5
+          # 6 7 8
+        
+        s1 <- as.character(search_matrix[r-1,c-1])
+        # if(s1 == "M"){check_list <- c(check_list, "s1")}
+        
+        s2 <- as.character(search_matrix[r-1,c])  
+        # if(s2 == "M"){check_list <- c(check_list, "s2")}
+        
+        s3 <- as.character(search_matrix[r-1,c+1])  
+        # if(s3 == "M"){check_list <- c(check_list, "s3")}
+        
+        s4 <- as.character(search_matrix[r,c-1])  
+        # if(s4 == "M"){check_list <- c(check_list, "s4")}
+        
+        s5 <- as.character(search_matrix[r,c+1])  
+        # if(s5 == "M"){check_list <- c(check_list, "s5")}
+        
+        s6 <- as.character(search_matrix[r+1,c-1])
+        # if(s6 == "M"){check_list <- c(check_list, "s6")}
+        
+        s7 <- as.character(search_matrix[r+1,c])
+        # if(s7 == "M"){check_list <- c(check_list, "s7")}
+        
+        s8 <- as.character(search_matrix[r+1,c+1])  
+        # if(s8 == "M"){check_list <- c(check_list, "s8")}
+        
+        neighbors <- list(n1 = as.character(search_matrix[r-1,c-1]), 
+                          n2 = as.character(search_matrix[r-1,c]), 
+                          n3 = as.character(search_matrix[r-1,c+1]), 
+                          n4 = as.character(search_matrix[r,c-1]), 
+                          n5 = as.character(search_matrix[r,c+1]), 
+                          n6 = as.character(search_matrix[r+1,c-1]), 
+                          n7 = as.character(search_matrix[r+1,c]),
+                          n8 = as.character(search_matrix[r+1,c+1]))
+        
+        for(n in 1:length(neighbors)){
+          sel_neighbor <- neighbors[[n]]
+          print(sel_neighbor)
+          
+          # Only want to keep following if there's a neighboring M
+          if(length(sel_neighbor) == 0) {next}
+          if(sel_neighbor != "M") {next}
+          
+          #If there's a neighboring M, follow same direction
+            direction = case_when(n == 1 ~ "NW",
+                                  n == 2 ~ "N",
+                                  n == 3 ~ "NE",
+                                  n == 4 ~ "W",
+                                  n == 5 ~ "E",
+                                  n == 6 ~ "SW",
+                                  n == 7 ~ "S",
+                                  n == 8 ~ "SE")
+            
+            #configure row-column steps based on direction
+            r_step = case_when(direction == "NW" ~ -1,
+                               direction == "N" ~ -1,
+                               direction == "NE" ~ -1,
+                               direction == "W" ~ 0,
+                               direction == "E" ~ 0,
+                               direction == "SW" ~ 1,
+                               direction == "S" ~ 1,
+                               direction == "SE" ~ 1,
+            )
+            
+            c_step = case_when(direction == "NW" ~ -1,
+                               direction == "N" ~ 0,
+                               direction == "NE" ~ 1,
+                               direction == "W" ~ -1,
+                               direction == "E" ~ 1,
+                               direction == "SW" ~ -1,
+                               direction == "S" ~ 0,
+                               direction == "SE" ~ 1,
+            )
+            
+            #check next letter in that direction for an A
+            letter_3 <- 
+          
 
+
+        }
+        
+        
+        check_list #FIX WHEN VALUE is 0
+
+        surrounding_indices <- ###
+        
+      }
+
+    }
   
