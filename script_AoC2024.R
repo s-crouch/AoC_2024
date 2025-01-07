@@ -605,17 +605,19 @@ library(readxl)
   search_matrix 
   
   #Check for viable letter combinations
+  directions <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW")
   word_count = 0
+  
     # Beginning at each X, search for "M", then "A", then "S".
   
     for(r in 1:nrow(search_matrix)){
       sel_row <- search_matrix[r,]
+      add_word = 0
       
       for(c in 1:length(sel_row)){
         sel_letter <- as.character(sel_row[c])
         print(sel_letter)
-        check_list <- c()
-        
+
         if(sel_letter != "X"){next} #if not an X, move on
         #print(paste0("Found an X!"))
         print(paste0("(", r,",",c,")"))
@@ -631,9 +633,9 @@ library(readxl)
           # 7 X 3
           # 6 5 4
         
-        directions <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-        
         for (d in 1:length(directions)){
+          direction = directions[d]
+          print(paste0("arrived!"))
           
           #configure row-column steps based on direction
           r_step = case_when(direction == "NW" ~ -1,
@@ -666,12 +668,13 @@ library(readxl)
           check_word <- paste0(sel_letter, n1, n2, n3) #put it all together
           print(check_word)
           if(check_word == "XMAS"){
-            word_count = word_count+1
-            print(paste0("XMAS found at (", r, ",", c, ")"))}
-
+              add_word = 1
+              print(paste0("XMAS found at (", r, ",", c, ")"))
+            }else{
+              add_word = 0
+            }
+          word_count = word_count + add_word
         }
-        
-        
       }
     } 
         
