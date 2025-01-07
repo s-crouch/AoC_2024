@@ -566,27 +566,19 @@ library(readxl)
   # ..M.M.M.MM
   # .X.X.XMASX
   
-  input_str <- "MMMSXXMASM
-               MSAMXMSMSA
-               AMXSXMAAMM
-               MSAMASMSMX
-               XMASAMXAMM
-               XXAMMXXAMA
-               SMSMSASXSS
-               SAXAMASAAA
-               MAMMMXMMMM
-               MXMXAXMASX"
+  # input_str <- "MMMSXXMASM
+  #              MSAMXMSMSA
+  #              AMXSXMAAMM
+  #              MSAMASMSMX
+  #              XMASAMXAMM
+  #              XXAMMXXAMA
+  #              SMSMSASXSS
+  #              SAXAMASAAA
+  #              MAMMMXMMMM
+  #              MXMXAXMASX"
   
-  # test_str <- "....XXMAS.
-  #              .SAMXMS...
-  #              ...S..A...
-  #              ..A.A.MS.X
-  #              XMASAMX.MM
-  #              X.....XA.A
-  #              S.S.S.S.SS
-  #              .A.A.A.A.A
-  #              ..M.M.M.MM
-  #              .X.X.XMASX"
+  filepath <- paste0(input_dir, "D4_P1.txt")
+  input_str <- readChar(filepath, file.info(filepath)$size)
   
   input_str_split <- strsplit(input_str, "\n") %>% 
                     unlist() %>% 
@@ -616,12 +608,10 @@ library(readxl)
       
       for(c in 1:length(sel_row)){
         sel_letter <- as.character(sel_row[c])
-        print(sel_letter)
 
         if(sel_letter != "X"){next} #if not an X, move on
         #print(paste0("Found an X!"))
-        print(paste0("(", r,",",c,")"))
-        
+
         # If an X is found, check surrounding letters for an M: 
         #surrounding letters:
           # (r-1,c-1) (r-1,c) (r-1,c+1)
@@ -635,8 +625,7 @@ library(readxl)
         
         for (d in 1:length(directions)){
           direction = directions[d]
-          print(paste0("arrived!"))
-          
+
           #configure row-column steps based on direction
           r_step = case_when(direction == "NW" ~ -1,
                              direction == "N" ~ -1,
@@ -666,7 +655,7 @@ library(readxl)
           if(length(n1) == 0|length(n2) == 0|length(n3) == 0){next}
           if(is.na(n1)|is.na(n2)|is.na(n3)){next}
           check_word <- paste0(sel_letter, n1, n2, n3) #put it all together
-          print(check_word)
+          # print(check_word)
           if(check_word == "XMAS"){
               add_word = 1
               print(paste0("XMAS found at (", r, ",", c, ")"))
