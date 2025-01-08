@@ -668,3 +668,85 @@ library(readxl)
     } 
         
 word_count        
+
+
+# PUZZLE 2 ---------------------------------------------------------------------
+
+  # Looking for the instructions, you flip over the word search to find that this isn't actually an XMAS puzzle; 
+  # it's an X-MAS puzzle in which you're supposed to find two MAS in the shape of an X. One way to achieve that is like this:
+    # M.S
+    # .A.
+    # M.S
+  # Irrelevant characters have again been replaced with . in the above diagram. 
+  # Within the X, each MAS can be written forwards or backwards.
+
+  #Find A's, which for neighboring M's and S's on opposite (N/S - E/W or NE/SW - SE - NW orientations)
+  
+  #Begin from Search Matrix - run lines 569:601
+  cross_count = 0 
+  directional_axes <- c("N - S & E - W", "NW - SE & NE - SW")
+
+  
+  for(r in 1:nrow(search_matrix)){
+    sel_row <- search_matrix[r,]
+    add_cross = 0
+    
+    for(c in 1:length(sel_row)){
+      sel_letter <- as.character(sel_row[c])
+      
+      if(sel_letter != "A"){next} #if not an A, move on
+      print(paste0("Found an A!"))
+      
+      # If an A is found, check surrounding letters for an M
+      for (d in 1:length(directional_axes)){
+        a1_good = NULL
+        a2_good = NULL
+        
+        sel_axis = directional_axes[d]
+        
+        #Find neighbors on first axis in pair
+        before_a1_r_step = case_when(sel_axis == "N - S & E - W" ~ -1, #N for d == 1
+                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NW for d == 2
+        before_a1_c_step = case_when(sel_axis == "N - S & E - W" ~ 0, #N for d == 1
+                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NW for d == 2
+        
+        after_a1_r_step  = case_when(sel_axis == "N - S & E - W" ~ 1, #S for d == 1
+                                     sel_axis == "NW - SE & NE - SW" ~ 1) #SE for d == 2
+        after_a1_c_step = case_when(sel_axis == "N - S & E - W" ~ 0, #S for d == 1
+                                    sel_axis == "NW - SE & NE - SW" ~ -1) #SE for d == 2
+        
+        #Find neighbors on second axis in pair
+        before_a2_r_step = case_when(sel_axis == "N - S & E - W" ~ 0, #E for d == 1
+                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NE for d == 2
+        before_a2_c_step = case_when(sel_axis == "N - S & E - W" ~ 1, #E for d == 1
+                                     sel_axis == "NW - SE & NE - SW" ~ 1) #NE for d == 2
+        
+        after_a2_r_step = case_when(sel_axis == "N - S & E - W" ~ 0, #W for d == 1
+                                    sel_axis == "NW - SE & NE - SW" ~ 1) #SW for d == 2
+        after_a2_c_step = case_when(sel_axis == "N - S & E - W" ~ -1, #W for d == 1
+                                    sel_axis == "NW - SE & NE - SW" ~ -1) #SW for d == 2
+        
+
+        #find the subsequent 3 neighbors 
+        before_a1 <- as.character(search_matrix[r+before_a1_r_step,c+before_a1_c_step]) #M
+        after_a1 <- as.character(search_matrix[r+after_a1_r_step,c+after_a1_c_step]) #S
+        a1_word <- paste0(before_a1, sel_letter, after_a1)
+        
+        before_a2 <- as.character(search_matrix[r+before_a2_r_step,c+before_a2_c_step]) #M
+        after_a2 <- as.character(search_matrix[r+after_a2_r_step,c+after_a2_c_step]) #S
+        a2_word <- paste0(before_a2, sel_letter, after_a2)
+        
+        print(a1_word)
+        print(a2_word)
+        #HANDLE NAs and BLANKS?
+        
+        a1_good = if(a1_word %in% c("MAS", "SAM")){TRUE}else{FALSE}
+        a2_good = if(a2_word %in% c("MAS", "SAM")){TRUE}else{FALSE}
+        
+        add_cross = a1_good * a2_good
+      }
+      cross_count = cross_count + add_cross
+    }
+  }
+
+    
