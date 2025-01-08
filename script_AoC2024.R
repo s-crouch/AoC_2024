@@ -696,7 +696,7 @@ word_count
       sel_letter <- as.character(sel_row[c])
       
       if(sel_letter != "A"){next} #if not an A, move on
-      print(paste0("Found an A!"))
+      # print(paste0("Found an A!"))
       
       # If an A is found, check surrounding letters for an M
       for (d in 1:length(directional_axes)){
@@ -737,15 +737,14 @@ word_count
         after_a2 <- as.character(search_matrix[r+after_a2_r_step,c+after_a2_c_step]) #S
         a2_word <- paste0(before_a2, sel_letter, after_a2)
         
-        print(a1_word)
-        print(a2_word)
-        #HANDLE NAs and BLANKS?
-        
+        # print(a1_word)
+        # print(a2_word)
+
         a1_good = if(a1_word %in% c("MAS", "SAM")){TRUE}else{FALSE}
         a2_good = if(a2_word %in% c("MAS", "SAM")){TRUE}else{FALSE}
         
         add_cross = a1_good * a2_good
-        if(add_cross == 1){print(paste0("Found one! Cross count: ", cross_count+1))}
+        # if(add_cross == 1){print(paste0("Found one! Cross count: ", cross_count+1))}
       }
       cross_count = cross_count + add_cross
     }
