@@ -749,5 +749,5 @@ word_count
       cross_count = cross_count + add_cross
     }
   }
-cross_count #should be 9 for example
+cross_count 
     
