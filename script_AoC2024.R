@@ -684,10 +684,11 @@ word_count
   
   #Begin from Search Matrix - run lines 569:601
   cross_count = 0 
-  directional_axes <- c("N - S & E - W", "NW - SE & NE - SW")
+  directional_axes <- c("N - S & W - E", "NW - SE & SW - NE")
 
   
   for(r in 1:nrow(search_matrix)){
+    print(paste0("Beginning row ", r))
     sel_row <- search_matrix[r,]
     add_cross = 0
     
@@ -705,26 +706,26 @@ word_count
         sel_axis = directional_axes[d]
         
         #Find neighbors on first axis in pair
-        before_a1_r_step = case_when(sel_axis == "N - S & E - W" ~ -1, #N for d == 1
-                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NW for d == 2
-        before_a1_c_step = case_when(sel_axis == "N - S & E - W" ~ 0, #N for d == 1
-                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NW for d == 2
+        before_a1_r_step = case_when(sel_axis == "N - S & W - E" ~ -1, #N for d == 1
+                                     sel_axis == "NW - SE & SW - NE" ~ -1) #NW for d == 2
+        before_a1_c_step = case_when(sel_axis == "N - S & W - E" ~ 0, #N for d == 1
+                                     sel_axis == "NW - SE & SW - NE" ~ -1) #NW for d == 2
         
-        after_a1_r_step  = case_when(sel_axis == "N - S & E - W" ~ 1, #S for d == 1
-                                     sel_axis == "NW - SE & NE - SW" ~ 1) #SE for d == 2
-        after_a1_c_step = case_when(sel_axis == "N - S & E - W" ~ 0, #S for d == 1
-                                    sel_axis == "NW - SE & NE - SW" ~ -1) #SE for d == 2
+        after_a1_r_step  = case_when(sel_axis == "N - S & W - E" ~ 1, #S for d == 1
+                                     sel_axis == "NW - SE & SW - NE" ~ 1) #SE for d == 2
+        after_a1_c_step = case_when(sel_axis == "N - S & W - E" ~ 0, #S for d == 1
+                                    sel_axis == "NW - SE & SW - NE" ~ 1) #SE for d == 2
         
         #Find neighbors on second axis in pair
-        before_a2_r_step = case_when(sel_axis == "N - S & E - W" ~ 0, #E for d == 1
-                                     sel_axis == "NW - SE & NE - SW" ~ -1) #NE for d == 2
-        before_a2_c_step = case_when(sel_axis == "N - S & E - W" ~ 1, #E for d == 1
-                                     sel_axis == "NW - SE & NE - SW" ~ 1) #NE for d == 2
+        before_a2_r_step = case_when(sel_axis == "N - S & W - E" ~ 0, #W for d == 1
+                                     sel_axis == "NW - SE & SW - NE" ~ 1) #SW for d == 2
+        before_a2_c_step = case_when(sel_axis == "N - S & W - E" ~ -1, #W for d == 1
+                                     sel_axis == "NW - SE & SW - NE" ~ -1) #SW for d == 2
         
-        after_a2_r_step = case_when(sel_axis == "N - S & E - W" ~ 0, #W for d == 1
-                                    sel_axis == "NW - SE & NE - SW" ~ 1) #SW for d == 2
-        after_a2_c_step = case_when(sel_axis == "N - S & E - W" ~ -1, #W for d == 1
-                                    sel_axis == "NW - SE & NE - SW" ~ -1) #SW for d == 2
+        after_a2_r_step = case_when(sel_axis == "N - S & W - E" ~ 0, #E for d == 1
+                                    sel_axis == "NW - SE & SW - NE" ~ -1) #NE for d == 2
+        after_a2_c_step = case_when(sel_axis == "N - S & W - E" ~ 1, #E for d == 1
+                                    sel_axis == "NW - SE & SW - NE" ~ 1) #NE for d == 2
         
 
         #find the subsequent 3 neighbors 
@@ -744,9 +745,10 @@ word_count
         a2_good = if(a2_word %in% c("MAS", "SAM")){TRUE}else{FALSE}
         
         add_cross = a1_good * a2_good
+        if(add_cross == 1){print(paste0("Found one! Cross count: ", cross_count+1))}
       }
       cross_count = cross_count + add_cross
     }
   }
-
+cross_count #should be 9 for example
     
