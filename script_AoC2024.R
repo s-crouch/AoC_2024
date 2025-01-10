@@ -749,5 +749,164 @@ word_count
       cross_count = cross_count + add_cross
     }
   }
-cross_count #should be 9 for example
+cross_count 
     
+
+### Day 5 ######################################################################
+
+# PUZZLE 1 ---------------------------------------------------------------------
+  # Safety protocols clearly indicate that new pages for the safety manuals must be printed in a very specific order. 
+  # The notation X|Y means that if both page number X and page number Y are to be produced as part of an update, 
+  # page number X must be printed at some point before page number Y.
+  
+  
+  # The Elf has for you both the page ordering rules and the pages to produce in each update (your puzzle input), 
+  # but can't figure out whether each update has the pages in the right order.
+  
+  # The first section specifies the page ordering rules, one per line. 
+  # The first rule, 47|53, means that if an update includes both page number 47 and page number 53, 
+  # then page number 47 must be printed at some point before page number 53. 
+  # (47 doesn't necessarily need to be immediately before 53; other pages are allowed to be between them.)
+  
+  # The second section specifies the page numbers of each update. 
+  # Because most safety manuals are different, the pages needed in the updates are different too. 
+  # The first update, 75,47,61,53,29, means that the update consists of page numbers 75, 47, 61, 53, and 29.
+  
+  # To get the printers going as soon as possible, start by identifying which updates are already in the right order.
+    # 75 is correctly first because there are rules that put each other page after it: 75|47, 75|61, 75|53, and 75|29.
+    # 47 is correctly second because 75 must be before it (75|47) and every other page must be after it according to 47|61, 47|53, and 47|29.
+    # 61 is correctly in the middle because 75 and 47 are before it (75|61 and 47|61) and 53 and 29 are after it (61|53 and 61|29).
+    # 53 is correctly fourth because it is before page number 29 (53|29).
+    # 29 is the only page left and so is correctly last.
+  # Because the first update does not include some page numbers, the ordering rules involving those missing page numbers are ignored.
+  
+  # The second and third updates are also in the correct order according to the rules. Like the first update, they also do not include every page number, and so only some of the ordering rules apply - within each update, the ordering rules that involve missing page numbers are not used.
+  
+  # The fourth update, 75,97,47,61,53, is not in the correct order: it would print 75 before 97, which violates the rule 97|75.
+  
+  # The fifth update, 61,13,29, is also not in the correct order, since it breaks the rule 29|13.
+  
+  # The last update, 97,13,75,29,47, is not in the correct order due to breaking several rules.
+  
+  # For some reason, the Elves also need to know the middle page number of each update being printed. Because you are currently only printing the correctly-ordered updates, you will need to find the middle page number of each correctly-ordered update. In the above example, the correctly-ordered updates are:
+  
+  # 75,47,61,53,29
+  # 97,61,53,29,13
+  # 75,29,13
+  # These have middle page numbers of 61, 53, and 29 respectively. Adding these page numbers together gives 143.
+  
+  # Of course, you'll need to be careful: the actual list of page ordering rules is bigger and more complicated than the above example.
+  
+  # Determine which updates are already in the correct order. What do you get if you add up the middle page number from those correctly-ordered updates?
+  
+  input_raw <- "47|53
+                97|13
+                97|61
+                97|47
+                75|29
+                61|13
+                75|53
+                29|13
+                97|29
+                53|29
+                61|53
+                97|53
+                61|29
+                47|13
+                75|47
+                97|75
+                47|61
+                75|61
+                47|29
+                75|13
+                53|13
+                
+                75,47,61,53,29
+                97,61,53,29,13
+                75,29,13
+                75,97,47,61,53
+                61,13,29
+                97,13,75,29,47"
+  
+  input_items <- input_raw %>% 
+                 str_split("\n")
+  
+  #Parse inputs into rules and update lists
+  input_rules <- c()
+  input_updates <- c()
+  
+  for(item in input_items[[1]]){
+    
+    foo <- str_replace_all(item, " ", "")
+    # print(foo)
+    rule_check = length(which(strsplit(foo, "")[[1]] == "|")) > 0
+    # print(rule_check)
+    if (rule_check == TRUE){
+      input_rules <- c(input_rules, foo)
+    }else{
+      if(foo == ""){next}
+      input_updates <- c(input_updates, foo)
+    }
+  }
+  
+  # input_rules_regex <- str_replace_all(input_rules, "\\|", ".*")
+  
+  passed_lists <- c()
+  
+# Check if the updates align with the rules
+  for(i in 1:length(input_updates)){
+    
+    sel_input <- input_updates[i]
+    # print(sel_input)
+    
+    #Parse included page numbers
+    pages <- str_split(sel_input, ",") %>%
+             unlist()
+    
+    c_all_met <- c()
+    
+    for(p in 1:length(pages)){
+      
+      sel_page <- pages[p]
+      
+      #Determine which rules apply to the current page
+      rel_rules <- input_rules[str_detect(input_rules, sel_page)]
+      c_rules_met <- c()
+      
+      for(r in 1:length(rel_rules)){
+        sel_rule <- rel_rules[r]
+        # print(sel_rule)
+        
+        #Check if both parts of rule are in input. If not, skip. 
+        rule_pgs <- str_split(sel_rule, "\\|") %>% unlist() 
+        p1 <- rule_pgs[1]
+        p2 <- rule_pgs[2]
+        
+        if ((p1 %in% pages & p2 %in% pages) == FALSE){next}
+        
+        #convert rule to regex
+        sel_rule_regex <- str_replace_all(sel_rule, "\\|", ".*")
+        
+        #If both pages are present, check that they're in the right order
+        rule_met <- str_detect(sel_input, sel_rule_regex)
+        # print(rule_met)
+        c_rules_met <- c(c_rules_met, rule_met)
+        
+      }
+      
+      all_met <- prod(c_rules_met) #if 1, yes. If 0, no. 
+      # print(all_met)
+      
+      c_all_met <- c(c_all_met, all_met)
+    }
+
+    if(prod(c_all_met) == 1){
+      print(paste0(sel_input, " List passes!"))
+      passed_lists <- c(passed_lists, sel_input) #Why is this duplicating? 
+      print(passed_lists)
+      }
+  }
+
+passed_lists #Correct list, but duplicated for some reason? 
+
+
