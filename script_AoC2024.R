@@ -902,11 +902,29 @@ cross_count
 
     if(prod(c_all_met) == 1){
       print(paste0(sel_input, " List passes!"))
-      passed_lists <- c(passed_lists, sel_input) #Why is this duplicating? 
+      passed_lists <- c(passed_lists, sel_input) 
       print(passed_lists)
       }
   }
 
-passed_lists #Correct list, but duplicated for some reason? 
+passed_lists 
 
+#Now find the middle numbers and add them together 
+middle_nums <- c()
+
+for(l in 1:length(passed_lists)){
+  sel_list <- passed_lists[l]
+  
+  pages <- str_split(sel_list, ",") %>%
+           unlist()
+  
+  middle_item_i <- (length(pages)/2 + .5)
+  
+  middle_page <- as.numeric(pages[middle_item_i])
+  
+  middle_nums <- c(middle_nums, middle_page)
+}
+
+print(middle_nums)
+sum(middle_nums)
 
